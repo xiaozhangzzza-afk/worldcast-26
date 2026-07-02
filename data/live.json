@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-02T14:33:22.179Z",
+  "updatedAt": "2026-07-02T19:57:44.954Z",
   "source": {
     "name": "ESPN public soccer data",
     "tournament": "FIFA World Cup",
@@ -2638,21 +2638,21 @@
       "stage": "32强",
       "stageSlug": "round-of-32",
       "group": "",
-      "status": "STATUS_SCHEDULED",
-      "statusText": "Scheduled",
+      "status": "STATUS_HALFTIME",
+      "statusText": "Halftime",
       "completed": false,
       "home": "ESP",
       "away": "AUT",
       "homeName": "西班牙",
       "awayName": "奥地利",
-      "homeScore": 0,
+      "homeScore": 1,
       "awayScore": 0,
-      "score": "3–0",
-      "scoreType": "预测比分",
+      "score": "1–0",
+      "scoreType": "实时比分",
       "probabilities": [
-        75,
-        17,
-        8
+        71,
+        19,
+        10
       ],
       "halfFull": "胜 / 胜",
       "venue": "SoFi Stadium",
@@ -2682,9 +2682,9 @@
       "score": "2–1",
       "scoreType": "预测比分",
       "probabilities": [
-        56,
-        25,
-        19
+        57,
+        26,
+        17
       ],
       "halfFull": "胜 / 胜",
       "venue": "BMO Field",
@@ -2810,9 +2810,9 @@
       "score": "2–0",
       "scoreType": "预测比分",
       "probabilities": [
-        63,
+        65,
         23,
-        14
+        12
       ],
       "halfFull": "胜 / 胜",
       "venue": "GEHA Field at Arrowhead Stadium",
@@ -2906,9 +2906,9 @@
       "score": "2–1",
       "scoreType": "预测比分",
       "probabilities": [
-        50,
+        51,
         26,
-        24
+        23
       ],
       "halfFull": "平 / 平",
       "venue": "MetLife Stadium",
@@ -3002,9 +3002,9 @@
       "score": "1–1",
       "scoreType": "预测比分",
       "probabilities": [
-        38,
+        37,
         28,
-        34
+        35
       ],
       "halfFull": "平 / 平",
       "venue": "Lumen Field",
@@ -9260,7 +9260,7 @@
           "name": "Crysencio Summerville",
           "shortName": "C. Summerville",
           "number": "24",
-          "position": "前锋",
+          "position": "中场",
           "age": 24,
           "injuries": []
         }
