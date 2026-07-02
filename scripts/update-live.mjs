@@ -12,7 +12,7 @@ const zh = {
   ARG:'阿根廷',ALG:'阿尔及利亚',AUS:'澳大利亚',AUT:'奥地利',BEL:'比利时',BIH:'波黑',BRA:'巴西',CAN:'加拿大',CPV:'佛得角',COL:'哥伦比亚',CRC:'哥斯达黎加',CRO:'克罗地亚',CUW:'库拉索',CZE:'捷克',COD:'刚果（金）',CIV:'科特迪瓦',ECU:'厄瓜多尔',EGY:'埃及',ENG:'英格兰',FRA:'法国',GER:'德国',GHA:'加纳',HAI:'海地',IRN:'伊朗',IRQ:'伊拉克',JPN:'日本',JOR:'约旦',KOR:'韩国',MEX:'墨西哥',MAR:'摩洛哥',NED:'荷兰',NZL:'新西兰',NOR:'挪威',PAN:'巴拿马',PAR:'巴拉圭',POR:'葡萄牙',QAT:'卡塔尔',KSA:'沙特阿拉伯',SCO:'苏格兰',SEN:'塞内加尔',RSA:'南非',ESP:'西班牙',SUI:'瑞士',SWE:'瑞典',TUN:'突尼斯',TUR:'土耳其',USA:'美国',UZB:'乌兹别克斯坦',URU:'乌拉圭'
 };
 const positionZh = { Goalkeeper:'门将', Defender:'后卫', Midfielder:'中场', Forward:'前锋' };
-const stageZh = {'group-stage':'小组赛','round-of-32':'32强','round-of-16':'16强','quarterfinals':'四分之一决赛','semifinals':'半决赛','third-place':'三四名决赛','final':'决赛'};
+const stageZh = {'group-stage':'小组赛','round-of-32':'32强','round-of-16':'16强','quarterfinals':'四分之一决赛','semifinals':'半决赛','3rd-place-match':'三四名决赛','final':'决赛'};
 
 async function getJson(url, retries = 3) {
   let error;
@@ -66,6 +66,7 @@ function normalizeEvent(event, matchNo) {
     date: event.date,
     stage: stageZh[event.season?.slug] || event.season?.slug || '世界杯',
     stageSlug: event.season?.slug || '',
+    group: (competition.altGameNote?.match(/Group\s+([A-L])/i) || [])[1]?.toUpperCase() || '',
     status: event.status?.type?.name || '',
     statusText: event.status?.type?.description || '',
     completed,
@@ -86,11 +87,14 @@ function normalizeEvent(event, matchNo) {
 }
 
 function recentForTeam(data, code) {
-  return (data.events || []).filter(e => e.status?.type?.completed).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10).map(event => {
+  return (data.events || []).filter(event => {
+    const competitors = event.competitions?.[0]?.competitors || [];
+    return new Date(event.date) < new Date() && competitors.length === 2 && competitors.every(c => c.score?.value != null || Number.isFinite(Number(c.score)));
+  }).sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 10).map(event => {
     const competitors = event.competitions?.[0]?.competitors || [];
     const self = competitors.find(c => c.team?.abbreviation === code) || {};
     const opponent = competitors.find(c => c.team?.abbreviation !== code) || {};
-    const own = Number(self.score || 0), other = Number(opponent.score || 0);
+    const own = Number(self.score?.value ?? self.score ?? 0), other = Number(opponent.score?.value ?? opponent.score ?? 0);
     return { date:event.date, opponent:zh[opponent.team?.abbreviation] || opponent.team?.displayName || '未知', score:`${own}-${other}`, result:own > other ? 'W' : own === other ? 'D' : 'L', competition:event.season?.name || '' };
   });
 }
