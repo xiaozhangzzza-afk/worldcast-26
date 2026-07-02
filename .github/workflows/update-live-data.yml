@@ -23,6 +23,8 @@ jobs:
           node-version: '24'
       - name: Fetch current fixtures, squads and injuries
         run: node scripts/update-live.mjs
+      - name: Audit all teams and fixtures
+        run: node scripts/audit-live.mjs
       - name: Commit changed data
         run: |
           if git diff --quiet -- data/live.json; then
