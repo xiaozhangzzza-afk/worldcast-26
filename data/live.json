@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-02T09:15:15.768Z",
+  "updatedAt": "2026-07-02T14:33:22.179Z",
   "source": {
     "name": "ESPN public soccer data",
     "tournament": "FIFA World Cup",
@@ -2650,9 +2650,9 @@
       "score": "3–0",
       "scoreType": "预测比分",
       "probabilities": [
-        73,
-        18,
-        9
+        75,
+        17,
+        8
       ],
       "halfFull": "胜 / 胜",
       "venue": "SoFi Stadium",
@@ -2682,11 +2682,11 @@
       "score": "2–1",
       "scoreType": "预测比分",
       "probabilities": [
-        55,
-        26,
+        56,
+        25,
         19
       ],
-      "halfFull": "平 / 平",
+      "halfFull": "胜 / 胜",
       "venue": "BMO Field",
       "city": "Toronto",
       "broadcast": [
@@ -2714,9 +2714,9 @@
       "score": "2–1",
       "scoreType": "预测比分",
       "probabilities": [
-        48,
+        49,
         29,
-        23
+        22
       ],
       "halfFull": "平 / 平",
       "venue": "BC Place",
@@ -2938,9 +2938,9 @@
       "score": "1–1",
       "scoreType": "预测比分",
       "probabilities": [
-        32,
         30,
-        38
+        30,
+        40
       ],
       "halfFull": "平 / 平",
       "venue": "Estadio Banorte",
@@ -3494,8 +3494,8 @@
           "name": "Brian Gutiérrez",
           "shortName": "B. Gutiérrez",
           "number": "26",
-          "position": "中场",
-          "age": 23,
+          "position": "后卫",
+          "age": 19,
           "injuries": []
         },
         {
@@ -17621,8 +17621,8 @@
           "name": "Andrés Andrade",
           "shortName": "A. Andrade",
           "number": "16",
-          "position": "后卫",
-          "age": 27,
+          "position": "中场",
+          "age": 37,
           "injuries": []
         },
         {
