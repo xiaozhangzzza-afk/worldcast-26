@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-03T02:03:48.066Z",
+  "updatedAt": "2026-07-03T04:14:03.452Z",
   "source": {
     "name": "ESPN public soccer data",
     "tournament": "FIFA World Cup",
@@ -9842,29 +9842,29 @@
       "stage": "32强",
       "stageSlug": "round-of-32",
       "group": "",
-      "status": "STATUS_SCHEDULED",
-      "statusText": "Scheduled",
+      "status": "STATUS_IN_PROGRESS",
+      "statusText": "In Progress",
       "completed": false,
-      "period": 0,
-      "displayClock": "0'",
-      "progress": 0,
+      "period": 2,
+      "displayClock": "54'",
+      "progress": 60,
       "home": "SUI",
       "away": "ALG",
       "homeName": "瑞士",
       "awayName": "阿尔及利亚",
-      "homeScore": 0,
+      "homeScore": 2,
       "awayScore": 0,
-      "score": "2–1",
-      "scoreType": "预测比分",
+      "score": "2–0",
+      "scoreType": "实时比分",
       "probabilities": [
         48,
         30,
         22
       ],
-      "halfTimeScore": "0–0",
-      "halfFull": "平 / 胜",
-      "halfFullType": "prediction",
-      "halfFullLabel": "半全场预测",
+      "halfTimeScore": "1–0",
+      "halfFull": "胜 / 进行中",
+      "halfFullType": "live",
+      "halfFullLabel": "半全场状态",
       "venue": "BC Place",
       "city": "Vancouver",
       "broadcast": [
@@ -9872,7 +9872,50 @@
         "Tele",
         "FOX One"
       ],
-      "timeline": []
+      "timeline": [
+        {
+          "id": "49682284",
+          "minute": "10'",
+          "clock": 599,
+          "period": 1,
+          "type": "goal",
+          "team": "SUI",
+          "side": "home",
+          "player": "Breel Embolo",
+          "assist": "Johan Manzambi",
+          "goalKind": "正常进球",
+          "ownGoal": false,
+          "description": "Goal! Switzerland 1, Algeria 0. Breel Embolo (Switzerland) left footed shot from very close range to the bottom left corner. Assisted by Johan Manzambi following a fast break."
+        },
+        {
+          "id": "49682655",
+          "minute": "36'",
+          "clock": 2122,
+          "period": 1,
+          "type": "yellow",
+          "team": "ALG",
+          "side": "away",
+          "player": "Farès Chaïbi",
+          "assist": "",
+          "goalKind": "",
+          "ownGoal": false,
+          "description": "Farès Chaïbi (Algeria) is shown the yellow card for a bad foul."
+        },
+        {
+          "id": "49682927",
+          "minute": "46'",
+          "clock": 2746,
+          "period": 2,
+          "type": "goal",
+          "team": "SUI",
+          "side": "home",
+          "player": "Dan Ndoye",
+          "assist": "",
+          "goalKind": "正常进球",
+          "ownGoal": false,
+          "description": "Goal! Switzerland 2, Algeria 0. Dan Ndoye (Switzerland) right footed shot from the centre of the box to the bottom left corner."
+        }
+      ]
     },
     {
       "id": "760499",
@@ -9896,9 +9939,9 @@
       "score": "1–1",
       "scoreType": "预测比分",
       "probabilities": [
-        29,
-        33,
-        38
+        27,
+        34,
+        39
       ],
       "halfTimeScore": "0–0",
       "halfFull": "平 / 平",
@@ -9935,8 +9978,8 @@
       "score": "3–0",
       "scoreType": "预测比分",
       "probabilities": [
-        83,
-        12,
+        84,
+        11,
         5
       ],
       "halfTimeScore": "0–0",
@@ -10166,15 +10209,15 @@
       "awayName": "西班牙",
       "homeScore": 0,
       "awayScore": 0,
-      "score": "1–1",
+      "score": "1–2",
       "scoreType": "预测比分",
       "probabilities": [
-        40,
-        30,
-        30
+        24,
+        27,
+        49
       ],
       "halfTimeScore": "0–0",
-      "halfFull": "平 / 平",
+      "halfFull": "平 / 负",
       "halfFullType": "prediction",
       "halfFullLabel": "半全场预测",
       "venue": "AT&T Stadium",
