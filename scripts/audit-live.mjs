@@ -21,6 +21,9 @@ for (const [code, team] of Object.entries(data.teams || {})) {
   if (!recent.length) warnings.push(`${code}: no recent results returned`);
   if (recent.length < 10) warnings.push(`${code}: only ${recent.length}/10 recent results returned`);
   if ((team.players || []).length < 26) warnings.push(`${code}: only ${team.players?.length || 0}/26 players returned`);
+  for (const player of team.players || []) {
+    if (!player.name || !player.nameZh) errors.push(`${code}: player is missing original or Chinese display name`);
+  }
   for (const [index, match] of recent.entries()) {
     const score = String(match.score).match(/^(\d+)-(\d+)$/);
     if (!score) { errors.push(`${code} recent #${index + 1}: invalid score ${match.score}`); continue; }
@@ -57,7 +60,15 @@ for (const fixture of data.fixtures || []) {
     if (fixture.scoreType !== '预测比分') errors.push(`${prefix}: scheduled match is labelled ${fixture.scoreType}`);
     const parts = fixture.halfFull.split(/\s*\/\s*/);
     if (parts.length !== 2 || parts[1] !== resultLabel(home, away)) errors.push(`${prefix}: prediction ${fixture.halfFull} disagrees with ${fixture.score}`);
+    const alternative = String(fixture.alternativeScore).match(/^(\d+)[–-](\d+)$/);
+    if (!alternative) errors.push(`${prefix}: missing alternative score`);
+    else {
+      const altHome = Number(alternative[1]), altAway = Number(alternative[2]);
+      if (fixture.alternativeScore === fixture.score) errors.push(`${prefix}: alternative score duplicates primary prediction`);
+      if (resultLabel(altHome, altAway) !== resultLabel(home, away)) errors.push(`${prefix}: alternative score changes predicted outcome`);
+    }
   }
+  if (fixture.scoreType === '实时比分' && (!fixture.clockSnapshotAt || !Number.isFinite(fixture.clockSeconds))) errors.push(`${prefix}: live clock cannot advance`);
   for (const event of fixture.timeline || []) {
     if (!['goal','yellow','red'].includes(event.type)) errors.push(`${prefix}: unsupported timeline event ${event.type}`);
     if (!event.minute || !event.player) errors.push(`${prefix}: incomplete timeline event ${event.id}`);

@@ -54,6 +54,49 @@ function predictScore(p) {
   return '1–1';
 }
 
+function alternativeScore(primary) {
+  return ({'3–0':'2–0','2–0':'3–0','2–1':'1–0','1–0':'2–1','1–1':'0–0','0–0':'1–1','1–2':'0–1','0–1':'1–2','0–2':'0–1'})[primary] || '1–1';
+}
+
+const verifiedPlayerZh = {
+  'Lionel Messi':'利昂内尔·梅西','Cristiano Ronaldo':'克里斯蒂亚诺·罗纳尔多','Kylian Mbappé':'基利安·姆巴佩','Neymar':'内马尔','Vinícius Júnior':'维尼修斯·儒尼奥尔','Jude Bellingham':'裘德·贝林厄姆','Harry Kane':'哈里·凯恩','Bukayo Saka':'布卡约·萨卡','Phil Foden':'菲尔·福登','Lamine Yamal':'拉明·亚马尔','Pedri':'佩德里','Gavi':'加维','Rodri':'罗德里','Jamal Musiala':'贾马尔·穆西亚拉','Florian Wirtz':'弗洛里安·维尔茨','Joshua Kimmich':'约书亚·基米希','Kai Havertz':'凯·哈弗茨','Antoine Griezmann':'安托万·格列兹曼','Ousmane Dembélé':'奥斯曼·登贝莱','William Saliba':'威廉·萨利巴','Virgil van Dijk':'维吉尔·范戴克','Cody Gakpo':'科迪·加克波','Frenkie de Jong':'弗兰基·德容','Bruno Fernandes':'布鲁诺·费尔南德斯','Bernardo Silva':'贝尔纳多·席尔瓦','Rafael Leão':'拉斐尔·莱奥','João Félix':'若昂·菲利克斯','Federico Valverde':'费德里科·巴尔韦德','Luis Suárez':'路易斯·苏亚雷斯','Darwin Núñez':'达尔文·努涅斯','Lautaro Martínez':'劳塔罗·马丁内斯','Julián Álvarez':'胡利安·阿尔瓦雷斯','Emiliano Martínez':'埃米利亚诺·马丁内斯','Alexis Mac Allister':'亚历克西斯·麦卡利斯特','Enzo Fernández':'恩佐·费尔南德斯','Raphinha':'拉菲尼亚','Marquinhos':'马尔基尼奥斯','Alisson':'阿利松','Ederson':'埃德森','Son Heung-Min':'孙兴慜','Kim Min-Jae':'金玟哉','Takefusa Kubo':'久保建英','Kaoru Mitoma':'三笘薰','Daichi Kamada':'镰田大地','Alphonso Davies':'阿方索·戴维斯','Jonathan David':'乔纳森·戴维','Christian Pulisic':'克里斯蒂安·普利西奇','Weston McKennie':'韦斯顿·麦肯尼','Guillermo Ochoa':'吉列尔莫·奥乔亚','Raúl Jiménez':'劳尔·希门尼斯','Santiago Giménez':'圣地亚哥·希门尼斯','Achraf Hakimi':'阿什拉夫·哈基米','Hakim Ziyech':'哈基姆·齐耶赫','Mohamed Salah':'穆罕默德·萨拉赫'
+};
+
+const communityPlayerZh = new Map();
+const normalizePlayerKey = value => String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[’']/g,'').replace(/\s+/g,' ').trim();
+
+async function loadCommunityPlayerNames() {
+  const sources = [
+    ['https://raw.githubusercontent.com/cairongquan/world_cup_2026/c92b8425be66cbd8d36ac0a41bcda993d3f1899f/scripts/lib/player-meta.mjs', /'([^']+)'\s*:\s*\{\s*zh:\s*'([^']+)'/g],
+    ['https://raw.githubusercontent.com/cshandsome-top/worldcup2026/6c173f4efc3186c9db329263d6ebe4c22001574c/js/zh-names.js', /"([^"]+)"\s*:\s*"([^"]+)"/g]
+  ];
+  for (const [url, pattern] of sources) {
+    try {
+      const text = await (await fetch(url, { headers:{ 'user-agent':'WorldCast26/1.0' } })).text();
+      for (const match of text.matchAll(pattern)) if (match[1] && match[2]) communityPlayerZh.set(normalizePlayerKey(match[1]), match[2]);
+    } catch {}
+  }
+}
+
+function chinesePlayerName(name) {
+  if (verifiedPlayerZh[name]) return verifiedPlayerZh[name];
+  if (communityPlayerZh.has(normalizePlayerKey(name))) return communityPlayerZh.get(normalizePlayerKey(name));
+  const chunks = {'sch':'施','sh':'什','ch':'奇','th':'特','ph':'菲','ll':'利','qu':'库','gu':'古','jo':'若','ja':'哈','je':'耶','ji':'吉','ca':'卡','co':'科','cu':'库','ce':'塞','ci':'西','ra':'拉','re':'雷','ri':'里','ro':'罗','ru':'鲁','la':'拉','le':'莱','li':'利','lo':'洛','lu':'卢','ma':'马','me':'梅','mi':'米','mo':'莫','mu':'穆','na':'纳','ne':'内','ni':'尼','no':'诺','nu':'努','sa':'萨','se':'塞','si':'西','so':'索','su':'苏','ta':'塔','te':'特','ti':'蒂','to':'托','tu':'图','va':'瓦','ve':'维','vi':'维','vo':'沃','za':'扎','ze':'泽','zi':'齐','a':'阿','b':'布','c':'克','d':'德','e':'埃','f':'弗','g':'格','h':'赫','i':'伊','j':'杰','k':'克','l':'尔','m':'姆','n':'恩','o':'奥','p':'普','q':'库','r':'尔','s':'斯','t':'特','u':'乌','v':'维','w':'沃','x':'克斯','y':'伊','z':'兹'};
+  return String(name || '球员').split(/[\s-]+/).filter(Boolean).map(word => {
+    let value = word.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z]/g,''), output = '';
+    while (value) {
+      const key = [3,2,1].map(size => value.slice(0,size)).find(part => chunks[part]);
+      if (!key) { value=value.slice(1); continue; }
+      output += chunks[key]; value=value.slice(key.length);
+    }
+    return output || '球员';
+  }).join('·');
+}
+
+function chinesePlayerNameSource(name) {
+  return verifiedPlayerZh[name] ? 'verified' : communityPlayerZh.has(normalizePlayerKey(name)) ? 'community' : 'auto';
+}
+
 function resultLabel(home, away) {
   return home > away ? '胜' : home < away ? '负' : '平';
 }
@@ -104,7 +147,9 @@ function normalizeTimeline(summary, event) {
       team:teamId === String(home.team?.id) ? home.team?.abbreviation : teamId === String(away.team?.id) ? away.team?.abbreviation : '',
       side:teamId === String(home.team?.id) ? 'home' : teamId === String(away.team?.id) ? 'away' : 'neutral',
       player:people[0] || '球员待确认',
+      playerZh:chinesePlayerName(people[0] || ''),
       assist:type === 'goal' && !ownGoal ? people[1] || '' : '',
+      assistZh:type === 'goal' && !ownGoal && people[1] ? chinesePlayerName(people[1]) : '',
       goalKind:type === 'goal' ? ownGoal ? '乌龙球' : penalty ? '点球' : header ? '头球' : '正常进球' : '',
       ownGoal,
       description:text
@@ -120,6 +165,7 @@ function normalizeEvent(event, matchNo) {
   const completed = Boolean(event.status?.type?.completed);
   const live = event.status?.type?.state === 'in';
   const prediction = predictScore(p);
+  const alternative = alternativeScore(prediction);
   const halfTime = actualHalfTime(competition, home, away);
   const finalHome = Number(home.score || 0), finalAway = Number(away.score || 0);
   const halfFull = completed
@@ -139,6 +185,8 @@ function normalizeEvent(event, matchNo) {
     completed,
     period:Number(event.status?.period || 0),
     displayClock:event.status?.displayClock || '',
+    clockSeconds:Number(event.status?.clock || 0),
+    clockSnapshotAt:new Date().toISOString(),
     progress:completed ? 100 : live ? Math.max(1, Math.min(99, Math.round(Number(event.status?.clock || 0) / 54))) : 0,
     home: home.team?.abbreviation || 'TBD',
     away: away.team?.abbreviation || 'TBD',
@@ -147,6 +195,7 @@ function normalizeEvent(event, matchNo) {
     homeScore: finalHome,
     awayScore: finalAway,
     score: completed || live ? `${home.score || 0}–${away.score || 0}` : prediction,
+    alternativeScore:completed || live ? '' : alternative,
     scoreType: completed ? '赛果' : live ? '实时比分' : '预测比分',
     probabilities: p,
     halfTimeScore: halfTime?.score || '',
@@ -186,6 +235,7 @@ async function concurrentMap(items, limit, worker) {
   return results;
 }
 
+await loadCommunityPlayerNames();
 const scoreboard = await getJson(`${DATA_URL}/${TOURNAMENT}/scoreboard?dates=${TOURNAMENT_RANGE}&limit=200`);
 const sortedEvents = [...(scoreboard.events || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
 const fixtures = sortedEvents.map((event, index) => normalizeEvent(event, index + 1));
@@ -211,7 +261,7 @@ const details = await concurrentMap(teamList, 6, async team => {
     getJson(`${DATA_URL}/all/teams/${team.id}/schedule?dates=${HISTORY_RANGE}`)
   ]);
   const players = (roster.athletes || []).map(a => ({
-    id:a.id, name:a.displayName, shortName:a.shortName, number:a.jersey || '', position:positionZh[a.position?.displayName] || a.position?.displayName || '球员', age:a.age || null,
+    id:a.id, name:a.displayName, nameZh:chinesePlayerName(a.displayName), nameZhSource:chinesePlayerNameSource(a.displayName), shortName:a.shortName, number:a.jersey || '', position:positionZh[a.position?.displayName] || a.position?.displayName || '球员', age:a.age || null,
     injuries:(a.injuries || []).map(i => ({ status:i.status || i.type?.description || '伤情待确认', detail:i.details || i.detail || i.description || '', date:i.date || '' }))
   }));
   return { ...team, players, injuries:players.flatMap(p => p.injuries.map(i => ({ player:p.name, ...i }))), recent:recentForTeam(schedule, team.code) };
@@ -221,8 +271,8 @@ const teams = Object.fromEntries(teamList.map((team, index) => [team.code, detai
 const output = {
   schemaVersion:1,
   updatedAt:new Date().toISOString(),
-  source:{ name:'ESPN public soccer data', tournament:'FIFA World Cup', url:'https://www.espn.com/soccer/league/_/name/fifa.world' },
-  refreshPolicy:'Every 6 hours during the tournament via GitHub Actions',
+  source:{ name:'ESPN public soccer data', tournament:'FIFA World Cup', url:'https://www.espn.com/soccer/league/_/name/fifa.world', playerNameReferences:['https://github.com/cairongquan/world_cup_2026','https://github.com/cshandsome-top/worldcup2026'] },
+  refreshPolicy:'Every 30 minutes during the tournament via GitHub Actions',
   fixtures,
   teams
 };
