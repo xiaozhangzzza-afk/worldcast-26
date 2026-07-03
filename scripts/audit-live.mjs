@@ -30,6 +30,41 @@ for (const [code, team] of Object.entries(data.teams || {})) {
   }
 }
 
+const resultLabel = (home, away) => home > away ? '胜' : home < away ? '负' : '平';
+for (const fixture of data.fixtures || []) {
+  const prefix = `match #${fixture.matchNo}`;
+  if ((fixture.probabilities || []).reduce((sum, value) => sum + value, 0) !== 100) errors.push(`${prefix}: probabilities do not total 100`);
+  const score = String(fixture.score).match(/^(\d+)[–-](\d+)$/);
+  if (!score) { errors.push(`${prefix}: invalid score ${fixture.score}`); continue; }
+  const home = Number(score[1]), away = Number(score[2]);
+  if (fixture.completed) {
+    if (fixture.scoreType !== '赛果') errors.push(`${prefix}: completed match is labelled ${fixture.scoreType}`);
+    if (home !== fixture.homeScore || away !== fixture.awayScore) errors.push(`${prefix}: final score fields disagree`);
+    if (fixture.halfFullType !== 'actual') errors.push(`${prefix}: completed match half/full is not actual`);
+    if (fixture.halfFull !== '暂无半场数据') {
+      const parts = fixture.halfFull.split(/\s*\/\s*/);
+      if (parts.length !== 2) errors.push(`${prefix}: invalid half/full ${fixture.halfFull}`);
+      else {
+        if (parts[1] !== resultLabel(home, away)) errors.push(`${prefix}: full-time result ${parts[1]} disagrees with ${fixture.score}`);
+        const half = String(fixture.halfTimeScore).match(/^(\d+)[–-](\d+)$/);
+        if (!half) errors.push(`${prefix}: missing halftime score`);
+        else if (parts[0] !== resultLabel(Number(half[1]), Number(half[2]))) errors.push(`${prefix}: halftime result disagrees with ${fixture.halfTimeScore}`);
+      }
+    }
+    const goals = (fixture.timeline || []).filter(event => event.type === 'goal');
+    if (goals.length !== fixture.homeScore + fixture.awayScore) errors.push(`${prefix}: timeline has ${goals.length} goals but score has ${fixture.homeScore + fixture.awayScore}`);
+  } else if (fixture.halfFullType === 'prediction') {
+    if (fixture.scoreType !== '预测比分') errors.push(`${prefix}: scheduled match is labelled ${fixture.scoreType}`);
+    const parts = fixture.halfFull.split(/\s*\/\s*/);
+    if (parts.length !== 2 || parts[1] !== resultLabel(home, away)) errors.push(`${prefix}: prediction ${fixture.halfFull} disagrees with ${fixture.score}`);
+  }
+  for (const event of fixture.timeline || []) {
+    if (!['goal','yellow','red'].includes(event.type)) errors.push(`${prefix}: unsupported timeline event ${event.type}`);
+    if (!event.minute || !event.player) errors.push(`${prefix}: incomplete timeline event ${event.id}`);
+    if (event.type === 'goal' && !['正常进球','乌龙球','点球','头球'].includes(event.goalKind)) errors.push(`${prefix}: invalid goal kind ${event.goalKind}`);
+  }
+}
+
 console.log(`Audit: ${data.fixtures.length} fixtures, ${Object.keys(data.teams).length} teams, ${Object.values(data.teams).reduce((n, t) => n + (t.recent?.length || 0), 0)} recent results`);
 for (const warning of warnings) console.warn(`WARNING ${warning}`);
 if (errors.length) {

@@ -54,12 +54,79 @@ function predictScore(p) {
   return '1–1';
 }
 
+function resultLabel(home, away) {
+  return home > away ? '胜' : home < away ? '负' : '平';
+}
+
+function scoreNumbers(score) {
+  const values = String(score).match(/\d+/g)?.map(Number) || [];
+  return values.length >= 2 ? values.slice(0, 2) : [0, 0];
+}
+
+function predictedHalfFull(p, score) {
+  const [home, away] = scoreNumbers(score);
+  const full = resultLabel(home, away);
+  const half = full === '胜' && p[0] >= 62 ? '胜' : full === '负' && p[2] >= 62 ? '负' : '平';
+  return `${half} / ${full}`;
+}
+
+function actualHalfTime(competition, home, away) {
+  const details = competition.details;
+  if (!Array.isArray(details)) return null;
+  let homeGoals = 0, awayGoals = 0;
+  for (const play of details) {
+    if (!play.scoringPlay || play.shootout || Number(play.clock?.value) > 2700) continue;
+    if (String(play.team?.id) === String(home.team?.id)) homeGoals += Number(play.scoreValue || 1);
+    if (String(play.team?.id) === String(away.team?.id)) awayGoals += Number(play.scoreValue || 1);
+  }
+  return { home:homeGoals, away:awayGoals, score:`${homeGoals}–${awayGoals}`, result:resultLabel(homeGoals, awayGoals) };
+}
+
+function normalizeTimeline(summary, event) {
+  const competition = event.competitions?.[0] || {};
+  const home = competition.competitors?.find(t => t.homeAway === 'home') || {};
+  const away = competition.competitors?.find(t => t.homeAway === 'away') || {};
+  return (summary.keyEvents || []).filter(play => play.scoringPlay || ['yellow-card','red-card'].includes(play.type?.type)).map(play => {
+    const rawType = play.type?.type || '';
+    const text = play.text || '';
+    const ownGoal = Boolean(play.ownGoal) || /own goal/i.test(text) || /own-goal/i.test(rawType);
+    const penalty = Boolean(play.penaltyKick) || /penalty/i.test(rawType) || /penalty/i.test(text);
+    const header = /header/i.test(rawType) || /header/i.test(text);
+    const type = play.scoringPlay ? 'goal' : rawType === 'red-card' ? 'red' : 'yellow';
+    const people = (play.participants || []).map(p => p.athlete?.displayName).filter(Boolean);
+    const teamId = String(play.team?.id || '');
+    return {
+      id:play.id || `${play.clock?.value}-${type}-${teamId}`,
+      minute:play.clock?.displayValue || '',
+      clock:Number(play.clock?.value || 0),
+      period:Number(play.period?.number || 0),
+      type,
+      team:teamId === String(home.team?.id) ? home.team?.abbreviation : teamId === String(away.team?.id) ? away.team?.abbreviation : '',
+      side:teamId === String(home.team?.id) ? 'home' : teamId === String(away.team?.id) ? 'away' : 'neutral',
+      player:people[0] || '球员待确认',
+      assist:type === 'goal' && !ownGoal ? people[1] || '' : '',
+      goalKind:type === 'goal' ? ownGoal ? '乌龙球' : penalty ? '点球' : header ? '头球' : '正常进球' : '',
+      ownGoal,
+      description:text
+    };
+  }).sort((a, b) => a.clock - b.clock);
+}
+
 function normalizeEvent(event, matchNo) {
   const competition = event.competitions?.[0] || {};
   const home = competition.competitors?.find(t => t.homeAway === 'home') || {};
   const away = competition.competitors?.find(t => t.homeAway === 'away') || {};
   const p = probabilities(competition.odds?.[0]);
   const completed = Boolean(event.status?.type?.completed);
+  const live = event.status?.type?.state === 'in';
+  const prediction = predictScore(p);
+  const halfTime = actualHalfTime(competition, home, away);
+  const finalHome = Number(home.score || 0), finalAway = Number(away.score || 0);
+  const halfFull = completed
+    ? halfTime ? `${halfTime.result} / ${resultLabel(finalHome, finalAway)}` : '暂无半场数据'
+    : live
+      ? Number(event.status?.period || 0) >= 2 && halfTime ? `${halfTime.result} / 进行中` : '半场进行中'
+      : predictedHalfFull(p, prediction);
   return {
     id: event.id,
     matchNo,
@@ -70,16 +137,22 @@ function normalizeEvent(event, matchNo) {
     status: event.status?.type?.name || '',
     statusText: event.status?.type?.description || '',
     completed,
+    period:Number(event.status?.period || 0),
+    displayClock:event.status?.displayClock || '',
+    progress:completed ? 100 : live ? Math.max(1, Math.min(99, Math.round(Number(event.status?.clock || 0) / 54))) : 0,
     home: home.team?.abbreviation || 'TBD',
     away: away.team?.abbreviation || 'TBD',
     homeName: zh[home.team?.abbreviation] || home.team?.displayName || '待定',
     awayName: zh[away.team?.abbreviation] || away.team?.displayName || '待定',
-    homeScore: Number(home.score || 0),
-    awayScore: Number(away.score || 0),
-    score: completed || event.status?.type?.state === 'in' ? `${home.score || 0}–${away.score || 0}` : predictScore(p),
-    scoreType: completed ? '赛果' : event.status?.type?.state === 'in' ? '实时比分' : '预测比分',
+    homeScore: finalHome,
+    awayScore: finalAway,
+    score: completed || live ? `${home.score || 0}–${away.score || 0}` : prediction,
+    scoreType: completed ? '赛果' : live ? '实时比分' : '预测比分',
     probabilities: p,
-    halfFull: p[0] > 55 ? '胜 / 胜' : p[2] > 45 ? '平 / 负' : '平 / 平',
+    halfTimeScore: halfTime?.score || '',
+    halfFull,
+    halfFullType: completed ? 'actual' : live ? 'live' : 'prediction',
+    halfFullLabel: completed ? '半全场赛果' : live ? '半全场状态' : '半全场预测',
     venue: competition.venue?.fullName || '场地待定',
     city: competition.venue?.address?.city || '',
     broadcast: competition.broadcasts?.flatMap(b => b.names || []) || []
@@ -116,6 +189,13 @@ async function concurrentMap(items, limit, worker) {
 const scoreboard = await getJson(`${DATA_URL}/${TOURNAMENT}/scoreboard?dates=${TOURNAMENT_RANGE}&limit=200`);
 const sortedEvents = [...(scoreboard.events || [])].sort((a, b) => new Date(a.date) - new Date(b.date));
 const fixtures = sortedEvents.map((event, index) => normalizeEvent(event, index + 1));
+const timelineEvents = sortedEvents.filter(event => ['in','post'].includes(event.status?.type?.state));
+const timelineData = await concurrentMap(timelineEvents, 8, async event => {
+  const summary = await getJson(`${DATA_URL}/${TOURNAMENT}/summary?event=${event.id}`);
+  return { id:event.id, timeline:normalizeTimeline(summary, event) };
+});
+const timelineById = new Map(timelineData.filter(item => item && !item.error).map(item => [item.id, item.timeline]));
+for (const fixture of fixtures) fixture.timeline = timelineById.get(fixture.id) || [];
 const teamIndex = new Map();
 for (const event of sortedEvents) {
   for (const competitor of event.competitions?.[0]?.competitors || []) {
