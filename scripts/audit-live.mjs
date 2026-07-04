@@ -76,6 +76,18 @@ for (const fixture of data.fixtures || []) {
   }
 }
 
+const summary = data.scoreSummary;
+if (!summary) errors.push('Missing score summary');
+else {
+  const completed = data.fixtures.filter(f => f.completed).length;
+  const future = data.fixtures.filter(f => !f.completed && f.halfFullType === 'prediction').length;
+  const counted = summary.distribution.reduce((sum, row) => sum + row.count, 0);
+  const additions = summary.distribution.reduce((sum, row) => sum + row.expectedAdditional, 0);
+  if (summary.completedMatches !== completed || counted !== completed) errors.push(`Score summary completed total mismatch: ${summary.completedMatches}/${counted}/${completed}`);
+  if (summary.futureMatches !== future || Math.abs(additions - future) > .6) errors.push(`Score summary forecast total mismatch: ${summary.futureMatches}/${additions}/${future}`);
+  if (summary.totalGoals !== data.fixtures.filter(f => f.completed).reduce((sum, f) => sum + f.homeScore + f.awayScore, 0)) errors.push('Score summary goal total mismatch');
+}
+
 console.log(`Audit: ${data.fixtures.length} fixtures, ${Object.keys(data.teams).length} teams, ${Object.values(data.teams).reduce((n, t) => n + (t.recent?.length || 0), 0)} recent results`);
 for (const warning of warnings) console.warn(`WARNING ${warning}`);
 if (errors.length) {

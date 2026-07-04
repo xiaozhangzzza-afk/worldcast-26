@@ -268,13 +268,30 @@ const details = await concurrentMap(teamList, 6, async team => {
 });
 
 const teams = Object.fromEntries(teamList.map((team, index) => [team.code, details[index]?.error ? { ...team, players:[], injuries:[], recent:[], fetchError:details[index].error } : details[index]]));
+function buildScoreSummary(items) {
+  const completed = items.filter(f => f.completed), future = items.filter(f => !f.completed && f.halfFullType === 'prediction'), counts = new Map(), additions = new Map();
+  for (const fixture of completed) counts.set(fixture.score, (counts.get(fixture.score) || 0) + 1);
+  for (const fixture of future) {
+    additions.set(fixture.score, (additions.get(fixture.score) || 0) + .65);
+    additions.set(fixture.alternativeScore, (additions.get(fixture.alternativeScore) || 0) + .35);
+  }
+  const scores = new Set([...counts.keys(), ...additions.keys()]);
+  return {
+    completedMatches:completed.length,
+    futureMatches:future.length,
+    totalGoals:completed.reduce((sum, f) => sum + f.homeScore + f.awayScore, 0),
+    distribution:[...scores].map(score => ({ score, count:counts.get(score) || 0, share:completed.length ? Math.round((counts.get(score) || 0) / completed.length * 1000) / 10 : 0, expectedAdditional:Math.round((additions.get(score) || 0) * 10) / 10, projected:Math.round(((counts.get(score) || 0) + (additions.get(score) || 0)) * 10) / 10 })).sort((a,b) => b.count-a.count || b.expectedAdditional-a.expectedAdditional || a.score.localeCompare(b.score)),
+    method:'后续增量按主预测比分 65%、备选比分 35% 加权估算，不代表确定赛果。'
+  };
+}
 const output = {
   schemaVersion:1,
   updatedAt:new Date().toISOString(),
   source:{ name:'ESPN public soccer data', tournament:'FIFA World Cup', url:'https://www.espn.com/soccer/league/_/name/fifa.world', playerNameReferences:['https://github.com/cairongquan/world_cup_2026','https://github.com/cshandsome-top/worldcup2026'] },
-  refreshPolicy:'Every 30 minutes during the tournament via GitHub Actions',
+  refreshPolicy:'Every 5 minutes during the tournament via GitHub Actions',
   fixtures,
-  teams
+  teams,
+  scoreSummary:buildScoreSummary(fixtures)
 };
 
 await fs.mkdir(path.join(root, 'data'), { recursive:true });
